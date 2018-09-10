@@ -18,6 +18,9 @@ public class DataHandler {
     @Autowired
     MailService mailService;
 
+    @Autowired
+    SMSservice smsService;
+
     @Value( "${totFailureRatio}" )
     private float maxTotFailureRatio;
 
@@ -112,6 +115,7 @@ public class DataHandler {
             mailBody+="More details in payment_transactions table";
             log.info("-------------------------------------\n"+mailBody);
             mailService.sendMail(mailBody);
+            smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+failedRatio+"\nPlease Check your mail for more details.");
         }
     }
 
@@ -132,5 +136,6 @@ public class DataHandler {
 
         log.info("-------------------------------------\n"+mailBody);
         mailService.sendMail(mailBody);
+        smsService.sendMessage("Card anomaly detected.\n#Pending Transaction = "+list.size()+"\nPlease Check your mail for more details.");
     }
 }
