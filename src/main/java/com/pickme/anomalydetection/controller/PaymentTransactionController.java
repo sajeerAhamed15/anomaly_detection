@@ -19,7 +19,7 @@ import java.util.List;
 
 @Component
 @PropertySource("classpath:application.properties")
-//@RequestMapping("/api/payment_transaction")
+@RequestMapping("/api/payment_transaction")
 public class PaymentTransactionController {
     @Autowired
     PaymentTransactionRepository paymentTransactionRepository;
@@ -114,6 +114,33 @@ public class PaymentTransactionController {
     //get last NOW.minusMinutes( ${timeWindowForPendingRequests} - 1 minute) gap request -> get all status 0 - return the paymentTransaction object in list
     public List<PaymentTransaction> getRecentByTimePending() {
         int from=timeWindowForPendingRequests;
+        int to=1;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(timeZone));
+        String dateFrom=dtf.format(zonedDateTime.minusMinutes(from));
+        String dateTo=dtf.format(zonedDateTime.minusMinutes(to));
+        System.out.println(dateFrom);
+        System.out.println(dateTo);
+        return paymentTransactionRepository.findByTimePending("2018-07-20 00:16:21",dateTo);//dateFrom
+    }
+
+
+    //Exposing APIs
+    //get all errors and success concated to the object in list and return
+    @GetMapping("/recentByTime/error/{minutes}")
+    public List<PaymentTransaction> getRecentByTimeDefaultAPI(@PathVariable(value = "minutes") int minutes) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String temp=dtf.format(now.minusMinutes(minutes));
+        System.out.println(temp);
+        return paymentTransactionRepository.findByTimeAndGroupByError("2018-07-20 00:16:21");//temp
+    }
+
+    //Exposing APIs
+    //get last NOW.minusMinutes( ${timeWindowForPendingRequests} - 1 minute) gap request -> get all status 0 - return the paymentTransaction object in list
+    @GetMapping("/recentByTime/pending/{minutes}")
+    public List<PaymentTransaction> getRecentByTimePendingAPI(@PathVariable(value = "minutes") int minutes) {
+        int from=minutes;
         int to=1;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(timeZone));
