@@ -27,7 +27,7 @@ public class SMSservice {
         for(int i=0;i<contactNumbers.length;i++)
         {
             //url should look like this: "http://35.184.75.146:8004/sendSMS?countryCode=94&number=77xxxxxxx&message=xx"
-            String fullURL=url+"countryCode="+countryCode+"&number="+contactNumbers[i]+"&message="+message;
+            String fullURL=url+"countryCode="+countryCode+"&number="+contactNumbers[i]+"&message="+message+"";
             RestTemplate restTemplate = new RestTemplate();
             String result = restTemplate.getForObject(fullURL, String.class);
 

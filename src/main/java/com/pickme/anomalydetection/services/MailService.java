@@ -1,37 +1,34 @@
 package com.pickme.anomalydetection.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class MailService {
-    @Autowired
-    private JavaMailSender sender;
+
+    @Value( "${email.url}" )
+    private String url;
+
+    @Value( "${email.emailaddress}" )
+    private String emailaddress;
 
 
-    @Value( "${mail.recievers}" )
-    private String mailRecievers;
+    public Boolean sendMailAPI(String message,String header)
+    {
+        String html="<html><body><h3>"+header+"</h3><p>"+message+"</p></body></html>";
 
-    public Boolean sendMail(String body) {
-        MimeMessage message = sender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
+        String[] emailID=emailaddress.replace(" ","").split(",");
 
-        try {
-            helper.setTo(mailRecievers.split(","));
-            helper.setSubject("Card Transactions Issue");
-            helper.setText(body);
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
+        for(int i=0;i<emailID.length;i++)
+        {
+            //url should look like this: "http://35.184.75.146:8004/sendEmail?html=<html><body><h3>header</h3><p>message</p></body></html>&subject=Card Transactions Issue&fromName=PickMe&toAddr=sajeer@pickme.lk"
+            String fullURL=url+"html="+html+"&subject=Card Transactions Issue&fromName=PickMe&toAddr="+emailID[i]+"";
+            RestTemplate restTemplate = new RestTemplate();
+            String result = restTemplate.getForObject(fullURL, String.class);
+
+            System.out.println(result);
         }
-        sender.send(message);
         return true;
     }
 }

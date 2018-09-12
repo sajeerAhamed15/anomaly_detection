@@ -83,20 +83,18 @@ public class DataHandler {
 
 
 
-        //checking for error threshold
+        //checking for tot error threshold
         if(failedRatio>maxTotFailureRatio){
             //fire an event
-            mailBody+="Reached Maximum fail:total request ratio.\n - Fail ratio = "+failedRatio+"\n\n";
+            mailBody+="Fail:Total request ratio.<br/> - Fail ratio = "+String.format("%.1f", failedRatio)+"<br/><br/>";
         }
-        if(pendingEntries>maxPending){
-            //fire an event
-            mailBody+="Reached Maximum pending request.\n - Pending Requests = "+pendingEntries+"\n\n";
-        }
+
+        //checking for indiviudual error threshold
         for (int i=0;i<errorRatio.size();i++){
             Float error=errorRatio.get(i);
             if(error>maxIndividualErrorRatio){
                 //fire an event
-                mailBody+="Reached Maximum Individual error request ratio.\n";
+                mailBody+="Individual error request ratio.<br/>";
                 break;
             }
         }
@@ -104,17 +102,16 @@ public class DataHandler {
             Float error=errorRatio.get(i);
             if(error>maxIndividualErrorRatio){
                 //fire an event
-                mailBody+=" - Response Message: "+errorMessage.get(i)+" = "+error+"\n";
+                mailBody+=" - Response message: "+errorMessage.get(i)+" = "+String.format("%.1f", error) +"<br/>";
             }
         }
 
         //mail if any error found
         if (!(mailBody.equals(""))){
-            mailBody+="\nTime Window = "+timeWindow+" Minutes\n";
-            mailBody+="More details in payment_transactions table";
+            mailBody+="<br/>More details in payment_transactions table";
             log.info("-------------------------------------\n"+mailBody);
-            mailService.sendMail(mailBody);
-            smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+failedRatio+"\nPlease Check your mail for more details.");
+            mailService.sendMailAPI(mailBody, "Reached maximum error ratio (Time Window = "+timeWindow+" Minutes)");
+            smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+String.format("%.1f", failedRatio) +"\nPlease Check your mail for more details.");
         }
     }
 
@@ -124,17 +121,18 @@ public class DataHandler {
             return;
 
 
-        String mailBody="Pending request increased threshold value (="+maxPending+" per "+timeWindowForPendingRequests+" Minutes)\n";
+        String mailHead="Pending request increased threshold value (="+maxPending+" per "+timeWindowForPendingRequests+" Minutes)<br/>";
+        String mailBody="";
         for (int i=0;i<list.size();i++) {
-            //fire en event
+           //fire en event
             PaymentTransaction paymentTransaction=list.get(i);
-            mailBody+=" - ID: "+paymentTransaction.getId()+" | Trip ID: "+paymentTransaction.getTrip_id()+" | Card ID: "+paymentTransaction.getCard_id()+" | Amount: "+paymentTransaction.getAmount()+"\n";
+            mailBody+=" - ID: "+paymentTransaction.getId()+" | Trip ID: "+paymentTransaction.getTrip_id()+" | Card ID: "+paymentTransaction.getCard_id()+" | Amount: "+paymentTransaction.getAmount()+"<br/>";
         }
 
-        mailBody+="\nMore details in payment_transactions table";
+        mailBody+="<br/>More details in payment_transactions table";
 
         log.info("-------------------------------------\n"+mailBody);
-        mailService.sendMail(mailBody);
-        smsService.sendMessage("Card anomaly detected.\n#Pending Transaction = "+list.size()+"\nPlease Check your mail for more details.");
+        mailService.sendMailAPI(mailBody,mailHead);
+        smsService.sendMessage("Card anomaly detected\nPending Transaction = "+list.size()+"\nCheck your mail for more details");
     }
 }

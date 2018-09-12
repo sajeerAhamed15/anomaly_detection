@@ -41,20 +41,11 @@ public class PaymentTransaction implements Serializable {
     @Column(name = "card_id")
     private Integer card_id;
 
-
     private int error_count;
 
-//    @Column(name = "trip_id")
-//    private String trip_id;
-//
-//    @Column(name = "trip_id")
-//    private String trip_id;
-//
-//    @Column(name = "trip_id")
-//    private String trip_id;
+
 
     public PaymentTransaction(){}
-
 
     public Long getId() {
         return id;
@@ -127,7 +118,6 @@ public class PaymentTransaction implements Serializable {
     public void setResponse_message(String response_message) {
         this.response_message = response_message;
     }
-
 
     public Integer getCard_id() {
         return card_id;
