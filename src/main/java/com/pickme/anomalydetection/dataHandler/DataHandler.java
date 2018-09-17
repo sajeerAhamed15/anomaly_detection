@@ -1,17 +1,18 @@
-package com.pickme.anomalydetection.services;
+package com.pickme.anomalydetection.dataHandler;
 
+import com.pickme.anomalydetection.config.Parameters;
 import com.pickme.anomalydetection.model.PaymentTransaction;
+import com.pickme.anomalydetection.services.MailService;
+import com.pickme.anomalydetection.services.SMSservice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
-@PropertySource("classpath:application.properties")
+@Component
 public class DataHandler {
 
     @Autowired
@@ -19,21 +20,6 @@ public class DataHandler {
 
     @Autowired
     SMSservice smsService;
-
-    @Value( "${totFailureRatio}" )
-    private float maxTotFailureRatio;
-
-    @Value( "${individualErrorRatio}" )
-    private float maxIndividualErrorRatio;
-
-    @Value( "${maxPending}" )
-    private int maxPending;
-
-    @Value( "${timeWindow}" )
-    private int timeWindow;
-
-    @Value( "${timeWindowForPendingRequests}" )
-    private int timeWindowForPendingRequests;
 
 
     private static final Logger log = LoggerFactory.getLogger(DataHandler.class);
@@ -84,7 +70,7 @@ public class DataHandler {
 
 
         //checking for tot error threshold
-        if(failedRatio>maxTotFailureRatio){
+        if(failedRatio> Parameters.maxTotFailureRatio){
             //fire an event
             mailBody+="Fail:Total request ratio.<br/> - Fail ratio = "+String.format("%.1f", failedRatio)+"<br/><br/>";
         }
@@ -92,7 +78,7 @@ public class DataHandler {
         //checking for indiviudual error threshold
         for (int i=0;i<errorRatio.size();i++){
             Float error=errorRatio.get(i);
-            if(error>maxIndividualErrorRatio){
+            if(error>Parameters.maxIndividualErrorRatio){
                 //fire an event
                 mailBody+="Individual error request ratio.<br/>";
                 break;
@@ -100,7 +86,7 @@ public class DataHandler {
         }
         for (int i=0;i<errorRatio.size();i++){
             Float error=errorRatio.get(i);
-            if(error>maxIndividualErrorRatio){
+            if(error>Parameters.maxIndividualErrorRatio){
                 //fire an event
                 mailBody+=" - Response message: "+errorMessage.get(i)+" = "+String.format("%.1f", error) +"<br/>";
             }
@@ -110,18 +96,18 @@ public class DataHandler {
         if (!(mailBody.equals(""))){
             mailBody+="<br/>More details in payment_transactions table";
             log.info("-------------------------------------\n"+mailBody);
-            mailService.sendMailAPI(mailBody, "Reached maximum error ratio (Time Window = "+timeWindow+" Minutes)");
+            mailService.sendMailAPI(mailBody, "Reached maximum error ratio (Time Window = "+Parameters.timeWindow+" Minutes)");
             smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+String.format("%.1f", failedRatio) +"\nPlease Check your mail for more details.");
         }
     }
 
     public void handlePendingRequest(List<PaymentTransaction> list) {
         //if #entries less than ${maxPending} then return
-        if(list.size()<maxPending)
+        if(list.size()<Parameters.maxPending)
             return;
 
 
-        String mailHead="Pending request increased threshold value (="+maxPending+" per "+timeWindowForPendingRequests+" Minutes)<br/>";
+        String mailHead="Pending request increased threshold value (="+Parameters.maxPending+" per "+Parameters.timeWindowForPendingRequests+" Minutes)<br/>";
         String mailBody="";
         for (int i=0;i<list.size();i++) {
            //fire en event
@@ -134,5 +120,22 @@ public class DataHandler {
         log.info("-------------------------------------\n"+mailBody);
         mailService.sendMailAPI(mailBody,mailHead);
         smsService.sendMessage("Card anomaly detected\nPending Transaction = "+list.size()+"\nCheck your mail for more details");
+    }
+
+    public void handleBadUsers(List<PaymentTransaction> list) {
+        String mailHead="Continuous failure from the following cards<br/>";
+        String mailBody="";
+        for (int i=0;i<list.size();i++) {
+            //fire en event
+            PaymentTransaction paymentTransaction=list.get(i);
+            if(paymentTransaction.getError_count()>5)
+                mailBody+=" - Card ID: "+paymentTransaction.getCard_id()+" | Total amount: "+paymentTransaction.getAmount()+"<br/>";
+        }
+
+        mailBody+="<br/>More details in payment_transactions table";
+
+        log.info("-------------------------------------\n"+mailBody);
+        mailService.sendMailAPI(mailBody,mailHead);
+        smsService.sendMessage("Continuous failure from the following cards\nCheck your mail for more details");
     }
 }

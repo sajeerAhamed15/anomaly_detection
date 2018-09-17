@@ -1,5 +1,6 @@
 package com.pickme.anomalydetection.controller;
 
+import com.pickme.anomalydetection.config.Parameters;
 import com.pickme.anomalydetection.model.PaymentTransaction;
 import com.pickme.anomalydetection.repository.PaymentTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,47 +20,34 @@ import java.util.List;
 
 //@Component
 @RestController
-@PropertySource("classpath:application.properties")
 @RequestMapping("/api/payment_transaction")
 public class PaymentTransactionController {
     @Autowired
     PaymentTransactionRepository paymentTransactionRepository;
 
-    @Value( "${timeWindow}" )
-    private int timeWindow;
-
-    @Value( "${timeWindowForPendingRequests}" )
-    private int timeWindowForPendingRequests;
-
-    @Value( "${countWindow}" )
-    private int countWindow;
-
-    @Value( "${timeZone}" )
-    private String timeZone;
-
-    @Value( "${maxPending}" )
-    private int maxPending;
 
     //get all errors and success concated to the object in list and return
     public List<PaymentTransaction> getRecentByTimeDefault() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        String temp=dtf.format(now.minusMinutes(timeWindow));
+        String temp=dtf.format(now.minusMinutes(Parameters.timeWindow));
         System.out.println(temp);
-        return paymentTransactionRepository.findByTimeAndGroupByError("2018-07-20 00:16:21");//temp
+        return paymentTransactionRepository.findByTimeAndGroupByError(temp);
+//        return paymentTransactionRepository.findByTimeAndGroupByError("2018-07-20 00:16:21");
     }
 
     //get last NOW.minusMinutes( ${timeWindowForPendingRequests} - 1 minute) gap request -> get all status 0 - return the paymentTransaction object in list
     public List<PaymentTransaction> getRecentByTimePending() {
-        int from=timeWindowForPendingRequests;
+        int from=Parameters.timeWindowForPendingRequests;
         int to=1;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(timeZone));
+        ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(Parameters.timeZone));
         String dateFrom=dtf.format(zonedDateTime.minusMinutes(from));
         String dateTo=dtf.format(zonedDateTime.minusMinutes(to));
         System.out.println(dateFrom);
         System.out.println(dateTo);
-        return paymentTransactionRepository.findByTimePending("2018-07-20 00:16:21",dateTo);//dateFrom
+        return paymentTransactionRepository.findByTimePending(dateFrom,dateTo);
+//        return paymentTransactionRepository.findByTimePending("2018-07-20 00:16:21",dateTo);
     }
 
 
@@ -71,7 +59,8 @@ public class PaymentTransactionController {
         LocalDateTime now = LocalDateTime.now();
         String temp=dtf.format(now.minusMinutes(minutes));
         System.out.println(temp);
-        return paymentTransactionRepository.findByTimeAndGroupByError("2018-07-20 00:16:21");//temp
+        return paymentTransactionRepository.findByTimeAndGroupByError(temp);
+//        return paymentTransactionRepository.findByTimeAndGroupByError("2018-07-20 00:16:21");
     }
 
     //Exposing APIs
@@ -81,12 +70,39 @@ public class PaymentTransactionController {
         int from=minutes;
         int to=1;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(timeZone));
+        ZonedDateTime zonedDateTime=ZonedDateTime.now(ZoneId.of(Parameters.timeZone));
         String dateFrom=dtf.format(zonedDateTime.minusMinutes(from));
         String dateTo=dtf.format(zonedDateTime.minusMinutes(to));
         System.out.println(dateFrom);
         System.out.println(dateTo);
-        return paymentTransactionRepository.findByTimePending("2018-07-20 00:16:21",dateTo);//dateFrom
+        return paymentTransactionRepository.findByTimePending(dateFrom,dateTo);
+//        return paymentTransactionRepository.findByTimePending("2018-07-20 00:16:21",dateTo);
     }
 
+    //get cards with faiure in last ${badRequestTimeWindow} hours and get their last ${badRequestCountWindow}
+    public List<PaymentTransaction> getBadUsers() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String temp=dtf.format(now.minusHours(Parameters.badRequestTimeWindow));
+        System.out.println(temp);
+        String value = "" +
+                "set @pk1 ='';" +
+                "set @rn1 =1;" +
+                "set @sal ='';" +
+                "select *, " +
+                "0 as tot_amount, " +
+                "COUNT(card_id) AS error_count " +
+                "from " +
+                "(select *, " +
+                " @rn1\\:=if(@pk1=card_id, if(@sal=id, @rn1, @rn1+1),1) as rank, " +
+                "@pk1\\:=card_id, " +
+                "@sal\\:=id  " +
+                "from payment_transactions " +
+                "where card_id in (select card_id from payment_transactions where date_created >= :date AND status=3 group by card_id) " +
+                "order by id desc)" +
+                "data " +
+                "where rank <= :limit and status =3 " +
+                "group by card_id;";
+        return paymentTransactionRepository.findBadUsers(temp,Parameters.badRequestCountWindow);
+    }
 }
