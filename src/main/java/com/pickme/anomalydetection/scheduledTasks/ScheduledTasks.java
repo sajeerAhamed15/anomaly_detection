@@ -37,12 +37,12 @@ public class ScheduledTasks {
         dataHandler.handleTotalErrorRequest(list);
     }
 
-    @Scheduled(fixedRateString = "${fixedRate.timeBetweenErrorCount}")//TODO
-    public void getBadUsers() {
-        log.info("getBadUsers: "+ "Initiated");
-        List<PaymentTransaction> list=paymentTransactionController.getBadUsers();
-        dataHandler.handleBadUsers(list);
-    }
+//    @Scheduled(fixedRateString = "${fixedRate.timeBetweenErrorCount}")//TODO
+//    public void getBadUsers() {
+//        log.info("getBadUsers: "+ "Initiated");
+//        List<PaymentTransaction> list=paymentTransactionController.getBadUsers();
+//        dataHandler.handleBadUsers(list);
+//    }
 
 
 

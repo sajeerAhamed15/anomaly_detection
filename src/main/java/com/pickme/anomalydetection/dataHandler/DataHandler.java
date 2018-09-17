@@ -72,7 +72,7 @@ public class DataHandler {
         //checking for tot error threshold
         if(failedRatio> Parameters.maxTotFailureRatio){
             //fire an event
-            mailBody+="Fail:Total request ratio.<br/> - Fail ratio = "+String.format("%.1f", failedRatio)+"<br/><br/>";
+            mailBody+="Fail:Total request ratio.<br/> - Fail ratio = "+String.format("%.1f", failedRatio*100)+"%<br/><br/>";
         }
 
         //checking for indiviudual error threshold
@@ -88,7 +88,7 @@ public class DataHandler {
             Float error=errorRatio.get(i);
             if(error>Parameters.maxIndividualErrorRatio){
                 //fire an event
-                mailBody+=" - Response message: "+errorMessage.get(i)+" = "+String.format("%.1f", error) +"<br/>";
+                mailBody+=" - Response message: "+errorMessage.get(i)+" = "+String.format("%.1f", error*100) +"%<br/>";
             }
         }
 
@@ -97,7 +97,7 @@ public class DataHandler {
             mailBody+="<br/>More details in payment_transactions table";
             log.info("-------------------------------------\n"+mailBody);
             mailService.sendMailAPI(mailBody, "Reached maximum error ratio (Time Window = "+Parameters.timeWindow+" Minutes)");
-            smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+String.format("%.1f", failedRatio) +"\nPlease Check your mail for more details.");
+            smsService.sendMessage("Card anomaly detected.\nFail Ratio = "+String.format("%.1f", failedRatio*100) +"%\nPlease Check your mail for more details.");
         }
     }
 
@@ -122,20 +122,20 @@ public class DataHandler {
         smsService.sendMessage("Card anomaly detected\nPending Transaction = "+list.size()+"\nCheck your mail for more details");
     }
 
-    public void handleBadUsers(List<PaymentTransaction> list) {
-        String mailHead="Continuous failure from the following cards<br/>";
-        String mailBody="";
-        for (int i=0;i<list.size();i++) {
-            //fire en event
-            PaymentTransaction paymentTransaction=list.get(i);
-            if(paymentTransaction.getError_count()>5)
-                mailBody+=" - Card ID: "+paymentTransaction.getCard_id()+" | Total amount: "+paymentTransaction.getAmount()+"<br/>";
-        }
-
-        mailBody+="<br/>More details in payment_transactions table";
-
-        log.info("-------------------------------------\n"+mailBody);
-        mailService.sendMailAPI(mailBody,mailHead);
-        smsService.sendMessage("Continuous failure from the following cards\nCheck your mail for more details");
-    }
+//    public void handleBadUsers(List<PaymentTransaction> list) {
+//        String mailHead="Continuous failure from the following cards<br/>";
+//        String mailBody="";
+//        for (int i=0;i<list.size();i++) {
+//            //fire en event
+//            PaymentTransaction paymentTransaction=list.get(i);
+//            if(paymentTransaction.getError_count()>5)
+//                mailBody+=" - Card ID: "+paymentTransaction.getCard_id()+" | Total amount: "+paymentTransaction.getAmount()+"<br/>";
+//        }
+//
+//        mailBody+="<br/>More details in payment_transactions table";
+//
+//        log.info("-------------------------------------\n"+mailBody);
+//        mailService.sendMailAPI(mailBody,mailHead);
+//        smsService.sendMessage("Continuous failure from the following cards\nCheck your mail for more details");
+//    }
 }

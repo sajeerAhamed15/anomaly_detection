@@ -80,29 +80,11 @@ public class PaymentTransactionController {
     }
 
     //get cards with faiure in last ${badRequestTimeWindow} hours and get their last ${badRequestCountWindow}
-    public List<PaymentTransaction> getBadUsers() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        String temp=dtf.format(now.minusHours(Parameters.badRequestTimeWindow));
-        System.out.println(temp);
-        String value = "" +
-                "set @pk1 ='';" +
-                "set @rn1 =1;" +
-                "set @sal ='';" +
-                "select *, " +
-                "0 as tot_amount, " +
-                "COUNT(card_id) AS error_count " +
-                "from " +
-                "(select *, " +
-                " @rn1\\:=if(@pk1=card_id, if(@sal=id, @rn1, @rn1+1),1) as rank, " +
-                "@pk1\\:=card_id, " +
-                "@sal\\:=id  " +
-                "from payment_transactions " +
-                "where card_id in (select card_id from payment_transactions where date_created >= :date AND status=3 group by card_id) " +
-                "order by id desc)" +
-                "data " +
-                "where rank <= :limit and status =3 " +
-                "group by card_id;";
-        return paymentTransactionRepository.findBadUsers(temp,Parameters.badRequestCountWindow);
-    }
+//    public List<PaymentTransaction> getBadUsers() {
+//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//        LocalDateTime now = LocalDateTime.now();
+//        String temp=dtf.format(now.minusHours(Parameters.badRequestTimeWindow));
+//        System.out.println(temp);
+//        return paymentTransactionRepository.findBadUsers(temp,Parameters.badRequestCountWindow);
+//    }
 }
