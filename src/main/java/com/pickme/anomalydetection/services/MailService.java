@@ -1,10 +1,10 @@
 package com.pickme.anomalydetection.services;
 
 import com.pickme.anomalydetection.config.Parameters;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-@Service
+@Component
 public class MailService {
 
     public Boolean sendMailAPI(String message,String header)

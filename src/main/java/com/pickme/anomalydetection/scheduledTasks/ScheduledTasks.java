@@ -23,14 +23,14 @@ public class ScheduledTasks {
     @Autowired
     PaymentTransactionController paymentTransactionController;
 
-    @Scheduled(fixedRateString = "${fixedRate.timeBetweenPendingCount}")
+    @Scheduled(fixedRateString = "${fixedRate.timeBetweenPendingCount}",initialDelay = 10000)
     public void getPendingRequests() {
         log.info("getPendingRequests: "+ "Initiated");
         List<PaymentTransaction> list=paymentTransactionController.getRecentByTimePending();
         dataHandler.handlePendingRequest(list);
     }
 
-    @Scheduled(fixedRateString = "${fixedRate.timeBetweenErrorCount}")
+    @Scheduled(fixedRateString = "${fixedRate.timeBetweenErrorCount}",initialDelay = 10000)
     public void getErrorRequests() {
         log.info("getErrorRequests: "+ "Initiated");
         List<PaymentTransaction> list=paymentTransactionController.getRecentByTimeDefault();
