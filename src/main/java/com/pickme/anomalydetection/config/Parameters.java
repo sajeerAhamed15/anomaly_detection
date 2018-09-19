@@ -2,9 +2,15 @@ package com.pickme.anomalydetection.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.stereotype.Component;
 
-@PropertySource("classpath:application.properties")
+
+@PropertySources({
+        @PropertySource(value = {"classpath:application.properties"}),
+        @PropertySource(value = "file:/opt/card-anomaly/config/application.properties", ignoreResourceNotFound = true)
+})
+
 @Component
 public class Parameters {
 

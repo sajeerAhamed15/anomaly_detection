@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.pickme</groupId>
-	<artifactId>anomaly-detection</artifactId>
+	<artifactId>card-anomaly-detection</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
-	<name>anomaly-detection</name>
+	<name>card-anomaly-detection</name>
 	<description>Detect anomalies in card payment</description>
 
 	<parent>
